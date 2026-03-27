@@ -17,6 +17,7 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   orders    Order[]
+  cart      Cart?
 
   @@map("users")
 }
@@ -35,12 +36,11 @@ model Product {
 
 model Cart {
   id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   items     Json[]   // [{productId, quantity}]
   updatedAt DateTime @updatedAt
 
-  @@unique([userId])
   @@map("carts")
 }
 
