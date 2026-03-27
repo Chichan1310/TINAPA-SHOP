@@ -1,0 +1,79 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: tinapashop
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Backend - Install deps
+      run: cd backend && npm ci
+      
+    - name: Backend - Prisma generate
+      run: cd backend && npx prisma generate --schema=prisma/schema.prisma
+      
+    - name: Backend - Lint
+      run: cd backend && npm run lint --if-present
+      
+    - name: Backend - Test
+      run: cd backend && npm test
+      env:
+        DATABASE_URL: postgresql://postgres:password@localhost:5432/tinapashop
+        
+    - name: Frontend - Install deps
+      run: cd frontend && npm ci
+      
+    - name: Frontend - Lint
+      run: cd frontend && npm run lint
+      
+    - name: Frontend - Test
+      run: cd frontend && npm run test
+    
+    - name: Docker Build
+      run: docker-compose build --no-cache
+    
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Login to Render (placeholder - configure in Render dashboard)
+      # Note: Render auto-deploys from GitHub webhook, no token needed here
+      run: echo 'Deploy triggered - Check Render/Netlify dashboards'
+      
+    - name: Notify on failure
+      if: failure()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # Optional
+
