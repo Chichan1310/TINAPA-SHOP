@@ -13,12 +13,17 @@
 - User auth, checkout/orders
 - Responsive React UI
 
-### CI/CD & Deploy
-- GitHub Actions: Auto-test/build/deploy on push/PR
-- Deploy: Render.com (backend/DB), Netlify (frontend)
-  1. Fork/push to GitHub
-  2. Render: New Web Service > GitHub repo > Docker for backend
-  3. Netlify: Connect GitHub repo for frontend
+### Deploy to Render.com (Full-stack)
+1. Push/merge to GitHub (triggers CI/CD tests)
+2. Render Dashboard: New > Web Service
+   - Connect GitHub repo (TINAPA-SHOP)
+   - Runtime: **Docker**
+   - docker-compose.prod.yml + .env (DATABASE_URL from Render Postgres)
+3. Add Postgres DB service (internal connect)
+4. Auto-deploys on push! (tests pass → live site)
+
+**Build Command**: (auto)
+**Start Command**: (auto Docker)
 
 ### Prod
 `docker-compose -f docker-compose.prod.yml up`
